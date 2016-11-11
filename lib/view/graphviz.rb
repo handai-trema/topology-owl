@@ -1,4 +1,5 @@
 require 'graphviz'
+require 'pio'
 
 module View
   # Topology controller's GUI (graphviz).
