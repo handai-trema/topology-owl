@@ -4,9 +4,10 @@
 メンバー 秋下 耀介、坂田 航樹、坂本 昂輝、佐竹 幸大、田中 達也、Jens Oetjen、齊藤 卓哉  
 
 ## 役割分担
-* 実機スイッチの設定、実行　田中、秋下
-* 課題2のプログラム作成　坂本
+* 実機スイッチの設定、実行　田中 (、秋下)
+* 課題2のプログラム作成　坂本、秋下
 * 課題1のレポート作成　田中
+* 課題2のレポート作成　坂本、秋下
 
 ## 課題１ (実機でトポロジを動かそう)
 
@@ -130,6 +131,119 @@ $ ./bin/trema run ./lib/topology_controller.rbf -- graphviz /tmp/topology2.png
 * ブラウザで表示する機能を追加する。おすすめは vis.js です
 
 ### 実装
+本機能の実装にあたり、実装を以下の２つに切り分けた。
+* トポロジ情報の取得（プログラムの解読）およびテキスト出力(担当：秋下)
+* テキスト情報に基づいたvis.jsによるトポロジの表示（担当：坂本）
+それぞれについての説明を以下に示す。
+
+
+#### トポロジ情報のテキスト出力
+ここでは、配布されたtopology.rbなどに変更を加え、トポロジ情報の出力を行う。
+次節で実際にトポロジの出力を行うが、そのための入力テキストファイルとして、lib/view/配下に以下のようなテキストファイルを作成するものとした。
+まず、ノード情報（スイッチ、ホスト）を記述したファイル（node.txt）は、
+```
+1	Switch:1
+2	Switch:2
+...
+10	Switch:10
+host
+11	Host:11
+12	Host:12
+...
+```
+のようになっており、１列目がID、２列目がラベルを表している。今回はスイッチとホストの区別を行うために、区切り文字として「host」を書き込んでいる。
+また、リンク情報を記述したファイル（link.txt）は、
+```
+1	4
+2	8
+...
+15	3
+16	4
+```
+のようになっており、１列目が送信元ノードのID、２列目が宛先ノードのIDを表している。すなわち、そのノード同士が接続されていることが読み取れるようになっている。ただし、無向グラフとして定義してる。
+
+上記のようなファイルを出力するにあたって、まず以下のファイルを新規作成した。
+* lib/view/vis.rb
+また、以下の2つのファイルに変更を加えた。
+* lib/topology.rb
+* lib/command_line.rb
+それぞれについて説明を行う。
+
+##### lib/view/vis.rb
+ここでは、トポロジの情報を実際にファイルとして書き出すメソッド等を実装した。
+まず以下のように初期化メソッドを定義することで、出力ファイルはデフォルトでlib/view配下に作成するものとした。
+```
+def initialize(output = 'lib/view/node.txt',output2 = 'lib/view/link.txt')
+      @output = output
+      @output2 = output2
+    end
+```
+
+
+```
+def update(_event, _changed, topology)
+      # write node data
+      File.open(@output, "w") do |file|
+        
+        #switch
+        nodes = topology.switches.each_with_object({}) do |each, tmp|
+          file.printf("%d Switch:%d\n",each.to_i, each.to_i)
+        end
+        #host
+        file.printf("host\n")
+        topology.hosts.each do |each|  #for all host
+          file.printf("%d Host:%d\n",each[1].to_i, each[1].to_i)
+        end
+
+      end
+
+      @temp = Hash.new { [] }#check link
+      # write link data
+      File.open(@output2, "w") do |file|
+        
+        #link of switches
+        topology.links.each do |each|
+          if checkLinkList(@temp,each.dpid_a.to_i,each.dpid_b.to_i )==true then
+            file.printf("%d %d\n",each.dpid_a.to_i, each.dpid_b.to_i)
+            @temp[each.dpid_a.to_i].push(each.dpid_b.to_i)
+          end
+        end
+        #link between host and switch
+        topology.hosts.each do |each|  #for all host
+          if checkLinkList(@temp,each[1].to_i,each[2].to_i )==true then
+            file.printf("%d %d\n",each[1].to_i, each[2].to_i)
+            @temp[each[1].to_i].push(each[2].to_i)
+          end
+        end
+      end
+      
+    end
+```
+
+
+checkLinkListメソッドは、すでにファイルに書き込んだ内容および、今書き込もうとしている内容が重なってないかを判断するメソッドで、以下のようになっている。
+```
+def checkLinkList(getList, a, b)
+      getList.each_key do |key|
+        getList[key].each do |each|
+          if (each == a && key==b) || (each == b && key==a) then
+            return false
+          end
+        end
+      end
+      return true
+    end
+```
+上記は、まずgetListの各キーを取得し、それらを用いて実際に保存されいてる各配列要素を確認していくものとなっている。そして、キーと配列要素が一致していた場合は、すでに書き込みが終わっている要素の組み合わせであるから、falseを返す。もし保存された要素の中に存在しなかった場合はtrueを返す。
+
+##### lib/topology.rb
+
+##### lib/command_line.rb
+
+
+
+
+#### vis.jsによるトポロジの表示
 
 ### 実行結果
 

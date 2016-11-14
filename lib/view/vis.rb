@@ -24,9 +24,6 @@ module View
           file.printf("%d Host:%d\n",each[1].to_i, each[1].to_i)
         end
 
-        ####
-        #@topology = outtext
-
       end
 
       @temp = Hash.new { [] }#check link
@@ -35,7 +32,6 @@ module View
         
         #link of switches
         topology.links.each do |each|
-          #next unless nodes[each.dpid_a] && nodes[each.dpid_b]
           if checkLinkList(@temp,each.dpid_a.to_i,each.dpid_b.to_i )==true then
             file.printf("%d %d\n",each.dpid_a.to_i, each.dpid_b.to_i)
             @temp[each.dpid_a.to_i].push(each.dpid_b.to_i)
