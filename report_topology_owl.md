@@ -131,9 +131,9 @@ $ ./bin/trema run ./lib/topology_controller.rbf -- graphviz /tmp/topology2.png
 * ブラウザで表示する機能を追加する。おすすめは vis.js です
 
 ### 実装
-本機能の実装にあたり、実装を以下の２つに切り分けた。
+本機能の実装を以下の２つに切り分けた。
 * トポロジ情報の取得（プログラムの解読）およびテキストファイル出力(担当：秋下)
-* テキスト情報に基づいたvis.jsによるトポロジの表示（担当：坂本）
+* テキスト情報に基づいたvis.jsによるトポロジの表示（担当：坂本）  
 それぞれについての説明を以下に示す。
 
 
@@ -166,10 +166,10 @@ link
 のようになっており、１列目が送信元ノードのID、２列目が宛先ノードのIDを表している。すなわち、そのノード同士が接続されていることが読み取れるようになっている。ただし、無向グラフとして定義してる。ここでは、リンク情報の前にノード情報が記述されているため、区切り文字として「link」を書き込んでいる。
 
 上記のようなファイルを出力するにあたって、まず以下のファイルを新規作成した。
-* lib/view/vis.rb
+* [lib/view/vis.rb](https://github.com/handai-trema/topology-owl/blob/master/lib/view/vis.rb)
 
 また、以下のファイルに変更を加えた。
-* lib/command_line.rb
+* [lib/command_line.rb](https://github.com/handai-trema/topology-owl/blob/master/lib/command_line.rb)
 
 それぞれについて説明を行う。
 
