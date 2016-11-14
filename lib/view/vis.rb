@@ -19,7 +19,7 @@ module View
           file.printf("%d Switch:%d\n",each.to_i, each.to_i)
         end
         #host
-        file.printf("-----host------\n")
+        file.printf("host\n")
         topology.hosts.each do |each|  #for all host
           file.printf("%d Host:%d\n",each[1].to_i, each[1].to_i)
         end
