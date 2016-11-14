@@ -1,6 +1,7 @@
 require 'gli'
 require 'pio'
 require 'view/text'
+#require 'view/vis.rb'
 
 # command-line options passed to topology-controller.rb
 class CommandLine
@@ -18,6 +19,7 @@ class CommandLine
     set_destination_mac_flag
     define_text_command
     define_graphviz_command
+    define_vis_command
     run args
   end
 
@@ -48,6 +50,14 @@ class CommandLine
     end
   end
 
+  def define_vis_command
+    desc 'Displays topology information (vis mode)'
+    arg_name 'output_file'
+    command :vis do |cmd|
+      cmd.action(&method(:create_vis_view))
+    end
+  end
+
   private
 
   def create_text_view(_global_options, _options, _args)
@@ -62,4 +72,14 @@ class CommandLine
       @view = View::Graphviz.new(args[0])
     end
   end
+
+  def create_vis_view(_global_options, _options, args)
+    require 'view/vis.rb'
+    if args.empty?
+      @view = View::VisJs.new
+    else
+      @view = View::VisJs.new(args[0])
+    end
+  end
+
 end
