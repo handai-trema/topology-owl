@@ -132,15 +132,15 @@ $ ./bin/trema run ./lib/topology_controller.rbf -- graphviz /tmp/topology2.png
 
 ### 実装
 本機能の実装にあたり、実装を以下の２つに切り分けた。
-* トポロジ情報の取得（プログラムの解読）およびテキスト出力(担当：秋下)
+* トポロジ情報の取得（プログラムの解読）およびテキストファイル出力(担当：秋下)
 * テキスト情報に基づいたvis.jsによるトポロジの表示（担当：坂本）
 それぞれについての説明を以下に示す。
 
 
-#### トポロジ情報のテキスト出力
+#### トポロジ情報のテキストファイル出力
 ここでは、配布されたtopology.rbなどに変更を加え、トポロジ情報の出力を行う。
 次節で実際にトポロジの出力を行うが、そのための入力テキストファイルとして、lib/view/配下に以下のようなテキストファイルを作成するものとした。
-まず、ノード情報（スイッチ、ホスト）を記述したファイル（node.txt）は、
+ノード情報（スイッチ、ホスト）は、
 ```
 1	Switch:1
 2	Switch:2
@@ -152,21 +152,25 @@ host
 ...
 ```
 のようになっており、１列目がID、２列目がラベルを表している。今回はスイッチとホストの区別を行うために、区切り文字として「host」を書き込んでいる。
-また、リンク情報を記述したファイル（link.txt）は、
+また、リンク情報は、
 ```
+...
+link
 1	4
 2	8
 ...
 15	3
 16	4
 ```
-のようになっており、１列目が送信元ノードのID、２列目が宛先ノードのIDを表している。すなわち、そのノード同士が接続されていることが読み取れるようになっている。ただし、無向グラフとして定義してる。
+のようになっており、１列目が送信元ノードのID、２列目が宛先ノードのIDを表している。すなわち、そのノード同士が接続されていることが読み取れるようになっている。ただし、無向グラフとして定義してる。ここでは、リンク情報の前にノード情報が記述されているため、区切り文字として「link」を書き込んでいる。
 
 上記のようなファイルを出力するにあたって、まず以下のファイルを新規作成した。
 * lib/view/vis.rb
+
 また、以下の2つのファイルに変更を加えた。
 * lib/topology.rb
 * lib/command_line.rb
+
 それぞれについて説明を行う。
 
 ##### lib/view/vis.rb
@@ -176,10 +180,10 @@ host
 def initialize(output = 'lib/view/node.txt',output2 = 'lib/view/link.txt')
       @output = output
       @output2 = output2
-    end
+end
 ```
 
-
+次に、テキストファイルへの書き出しを行うメソッドは以下のような実装とした。
 ```
 def update(_event, _changed, topology)
       # write node data
@@ -195,13 +199,9 @@ def update(_event, _changed, topology)
           file.printf("%d Host:%d\n",each[1].to_i, each[1].to_i)
         end
 
-      end
-
-      @temp = Hash.new { [] }#check link
-      # write link data
-      File.open(@output2, "w") do |file|
-        
+        @temp = Hash.new { [] }#check link
         #link of switches
+        file.printf("link\n")
         topology.links.each do |each|
           if checkLinkList(@temp,each.dpid_a.to_i,each.dpid_b.to_i )==true then
             file.printf("%d %d\n",each.dpid_a.to_i, each.dpid_b.to_i)
@@ -215,11 +215,14 @@ def update(_event, _changed, topology)
             @temp[each[1].to_i].push(each[2].to_i)
           end
         end
+
       end
       
-    end
+end
 ```
-
+上記では、まずnode.txtへの出力を行い、その後link.txtへの出力を行っている。node.txtに対しての書き込みでは、各スイッチおよび各ホストの要素をひとつずつ確認していく。
+ここでノードの情報はそのノードIDがいくつであるかのみ分かれば良いため、IDおよびそのIDを用いたラベルを書き込む。
+同様に、link.txtに対しての書き込みでは、各リンクの要素をひとつずつ確認する。このとき、checkListメソッドがtrueであれば、実際に書き込みを行う。そして、書き込んだ内容を@tempに保存する。ここで、linksにはスイッチ間のリンク情報しか保存されていないため、hostの要素をひとつずつ確認し、ホスト--スイッチ間のリンクも追加する。ただしこの時も同様に、checkListメソッドがtrueであれば書き込みを行う。
 
 checkLinkListメソッドは、すでにファイルに書き込んだ内容および、今書き込もうとしている内容が重なってないかを判断するメソッドで、以下のようになっている。
 ```
@@ -231,15 +234,49 @@ def checkLinkList(getList, a, b)
           end
         end
       end
-      return true
-    end
+   return true
+end
 ```
 上記は、まずgetListの各キーを取得し、それらを用いて実際に保存されいてる各配列要素を確認していくものとなっている。そして、キーと配列要素が一致していた場合は、すでに書き込みが終わっている要素の組み合わせであるから、falseを返す。もし保存された要素の中に存在しなかった場合はtrueを返す。
 
 ##### lib/topology.rb
+```
+
+```
+
+
+```
+
+```
+
+
+```
+
+```
 
 ##### lib/command_line.rb
-
+ここでは、コマンドラインから今回実装したテキストファイルへの出力コマンドを実装できるよう、`define_graphviz_command`メソッドを参考にして以下のメソッドを追加した。
+```
+  def define_vis_command
+    desc 'Displays topology information (vis mode)'
+    arg_name 'output_file'
+    command :vis do |cmd|
+      cmd.action(&method(:create_vis_view))
+    end
+  end
+```
+また、合わせてparseメソッドに上記メソッドを書き込んだ。そして`create_graphviz_view`と同様にして以下のprivateメソッドを定義した。
+```
+def create_vis_view(_global_options, _options, args)
+    require 'view/vis.rb'
+    if args.empty?
+      @view = View::VisJs.new
+    else
+      @view = View::VisJs.new(args[0])
+    end
+ end
+```
+これによって、vis.rbが表示形式として選択されるようになる。
 
 
 
