@@ -37,6 +37,10 @@ module View
       'text mode'
     end
 
+    def add_host(mac_address, port, topology)
+      show_status("host #{mac_address} added", topology.hosts)
+    end
+
     private
 
     def add_or_delete_port(message, port, topology)

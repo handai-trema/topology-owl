@@ -21,6 +21,7 @@ class Topology
 
   attr_reader :links
   attr_reader :ports
+  attr_reader :hosts
 
   def initialize
     @observers = []
