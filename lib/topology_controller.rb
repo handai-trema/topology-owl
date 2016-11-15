@@ -1,5 +1,6 @@
 require 'command_line'
 require 'topology'
+require 'pio'
 
 # This controller collects network topology information using LLDP.
 class TopologyController < Trema::Controller

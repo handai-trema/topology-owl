@@ -1,9 +1,30 @@
-1 Name1
-2 Name2
+7 Switch:7
+21 Switch:21
+19 Switch:19
+1 Switch:1
+2 Switch:2
+9 Switch:9
+22 Switch:22
+6 Switch:6
+18 Switch:18
+4 Switch:4
+20 Switch:20
+16 Switch:16
+17 Switch:17
+8 Switch:8
 host
-3 host1
-4 host2
+2852023475 Host:2852023475
+2852050703 Host:2852050703
 link
-1 2
-1 3
-2 4
+7 20
+21 6
+19 8
+1 1
+2 9
+9 16
+22 18
+6 4
+16 17
+22 6
+2852023475 4
+2852050703 22
